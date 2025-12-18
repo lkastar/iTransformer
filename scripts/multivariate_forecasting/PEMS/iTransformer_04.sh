@@ -1,6 +1,7 @@
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=0
 
 model_name=iTransformer
+desc=${1:-Baseline}
 
 python -u run.py \
   --is_training 1 \
@@ -16,7 +17,7 @@ python -u run.py \
   --enc_in 307 \
   --dec_in 307 \
   --c_out 307 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
   --learning_rate 0.0005 \
@@ -37,7 +38,7 @@ python -u run.py \
   --enc_in 307 \
   --dec_in 307 \
   --c_out 307 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
   --learning_rate 0.0005 \
@@ -58,7 +59,7 @@ python -u run.py \
   --enc_in 307 \
   --dec_in 307 \
   --c_out 307 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
   --learning_rate 0.0005 \
@@ -79,7 +80,7 @@ python -u run.py \
   --enc_in 307 \
   --dec_in 307 \
   --c_out 307 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
   --learning_rate 0.0005 \

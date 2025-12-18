@@ -1,6 +1,7 @@
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=0
 
 model_name=iTransformer
+desc=${1:-Baseline}
 
 python -u run.py \
   --is_training 1 \
@@ -16,7 +17,7 @@ python -u run.py \
   --enc_in 862 \
   --dec_in 862 \
   --c_out 862 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 512\
   --d_ff 512 \
   --batch_size 16 \
@@ -37,7 +38,7 @@ python -u run.py \
   --enc_in 862 \
   --dec_in 862 \
   --c_out 862 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 512 \
   --d_ff 512 \
   --batch_size 16 \
@@ -58,7 +59,7 @@ python -u run.py \
   --enc_in 862 \
   --dec_in 862 \
   --c_out 862 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 512\
   --d_ff 512 \
   --batch_size 16 \
@@ -79,7 +80,7 @@ python -u run.py \
   --enc_in 862 \
   --dec_in 862 \
   --c_out 862 \
-  --des 'Exp' \
+  --des $desc \
   --d_model 512 \
   --d_ff 512 \
   --batch_size 16 \

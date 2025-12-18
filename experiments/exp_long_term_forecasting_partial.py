@@ -330,7 +330,7 @@ class Exp_Long_Term_Forecast_Partial(Exp_Basic):
 
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}'.format(mse, mae))
-        f = open("result_long_term_forecast.txt", 'a')
+        f = open(f"{self.args.log_path}/{self.args.des}_result_long_term_forecast.log", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}'.format(mse, mae))
         f.write('\n')
