@@ -36,61 +36,11 @@ class Exp_Long_Term_Forecast(Exp_Basic):
     def _get_data(self, flag):
         data_set, data_loader = data_provider(self.args, flag)
         return data_set, data_loader
-    
-    def get_muon_optimizer(model, lr_muon=0.02, lr_adam=3e-4, weight_decay=0.01):
-        # 定义 Muon 想要优化的参数列表
-        muon_params = []
-        # 定义 AdamW 想要优化的参数列表
-        adamw_params = []
-
-        # 这里的关键词用于识别哪些层属于“输入嵌入”或“输出头”
-        # 根据你的模型结构，这些层的权重不应该用 Muon 优化
-        embedding_or_head_keywords = [
-            "trend_net",          # 输入变换
-            "enc_embedding",      # 输入嵌入
-            "anchor_weights",     # PAEmbedding 中的锚点参数 (类似 Embedding)
-            "projector",          # 输出头 (包括 season_net.projector 和 外层 projector)
-        ]
-
-        print("正在划分 Muon/AdamW 参数组...")
-        
-        for name, p in model.named_parameters():
-            # 1. 所有的 Bias, LayerNorm, 1D 向量 -> 必须用 AdamW
-            if p.ndim < 2:
-                adamw_params.append(p)
-                continue
-            
-            # 2. 检查是否属于 Embedding 或 Head -> 必须用 AdamW
-            # 只要参数名包含上述关键词之一，就归入 AdamW
-            is_embed_or_head = any(k in name for k in embedding_or_head_keywords)
-            
-            if is_embed_or_head:
-                adamw_params.append(p)
-            else:
-                # 3. 剩下的所有 2D+ 矩阵 (Attention权重, Conv权重, Linear权重) -> 用 Muon
-                # 这包括 season_net.encoder, fusion_layer 等
-                muon_params.append(p)
-                # 可选：打印一下确认被分到 Muon 的参数
-                print(f"Muon optimizing: {name} | shape: {p.shape}")
-
-        # 构建参数组
-        param_groups = [
-            # Muon 组：通常学习率较高 (如 0.02)
-            dict(params=muon_params, use_muon=True, lr=lr_muon, weight_decay=weight_decay),
-            
-            # AdamW 组：处理剩下的所有参数，标准学习率 (如 3e-4)
-            dict(params=adamw_params, use_muon=False, lr=lr_adam, weight_decay=weight_decay, betas=(0.90, 0.95))
-        ]
-
-        # 初始化优化器
-        optimizer = MuonWithAuxAdam(param_groups)
-        
-        return optimizer
 
     def _select_optimizer(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=3e-4, betas=(0.90, 0.95), weight_decay=0.01)
-        # model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
-        return optimizer
+        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        return model_optim
 
     def _select_criterion(self):
         criterion = nn.MSELoss()

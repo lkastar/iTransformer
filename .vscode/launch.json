@@ -1,0 +1,35 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "[DEBUG] Train ETTh1 96 96",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--is_training", "1",
+                "--root_path", "./dataset/ETT-small/",
+                "--data_path", "ETTh1.csv",
+                "--model_id", "ETTh1_96_96",
+                "--model", "Testformer",
+                "--data", "ETTh1",
+                "--features", "M",
+                "--seq_len", "96",
+                "--pred_len", "96",
+                "--e_layers", "2",
+                "--enc_in", "7",
+                "--dec_in", "7",
+                "--c_out", "7",
+                "--d_model", "256",
+                "--d_ff", "256",
+                "--itr", "1",
+                "--des", "Dbg",
+                "--use_wandb",
+            ]
+        }
+    ]
+}

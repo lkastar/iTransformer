@@ -1,4 +1,6 @@
+wandb
 .venv
+.env
 dataset
 checkpoints
 logs
