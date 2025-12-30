@@ -1,6 +1,7 @@
+import wandb
 from data_provider.data_factory import data_provider
 from experiments.exp_basic import Exp_Basic
-from utils.tools import EarlyStopping, adjust_learning_rate, visual
+from utils.tools import EarlyStopping, adjust_learning_rate, create_plot_figure, visual
 from utils.metrics import metric
 import torch
 import torch.nn as nn
@@ -9,6 +10,8 @@ import os
 import time
 import warnings
 import numpy as np
+import matplotlib.pyplot as plt
+from muon import MuonWithAuxAdam
 
 warnings.filterwarnings('ignore')
 
@@ -16,6 +19,12 @@ warnings.filterwarnings('ignore')
 class Exp_Long_Term_Forecast(Exp_Basic):
     def __init__(self, args):
         super(Exp_Long_Term_Forecast, self).__init__(args)
+        self.logger = None
+        
+        if args.use_wandb:
+            self.logger = wandb.init(
+                project=args.wandb_project, 
+                name=f"{args.des}_{args.model_id}")
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
@@ -27,10 +36,61 @@ class Exp_Long_Term_Forecast(Exp_Basic):
     def _get_data(self, flag):
         data_set, data_loader = data_provider(self.args, flag)
         return data_set, data_loader
+    
+    def get_muon_optimizer(model, lr_muon=0.02, lr_adam=3e-4, weight_decay=0.01):
+        # 定义 Muon 想要优化的参数列表
+        muon_params = []
+        # 定义 AdamW 想要优化的参数列表
+        adamw_params = []
+
+        # 这里的关键词用于识别哪些层属于“输入嵌入”或“输出头”
+        # 根据你的模型结构，这些层的权重不应该用 Muon 优化
+        embedding_or_head_keywords = [
+            "trend_net",          # 输入变换
+            "enc_embedding",      # 输入嵌入
+            "anchor_weights",     # PAEmbedding 中的锚点参数 (类似 Embedding)
+            "projector",          # 输出头 (包括 season_net.projector 和 外层 projector)
+        ]
+
+        print("正在划分 Muon/AdamW 参数组...")
+        
+        for name, p in model.named_parameters():
+            # 1. 所有的 Bias, LayerNorm, 1D 向量 -> 必须用 AdamW
+            if p.ndim < 2:
+                adamw_params.append(p)
+                continue
+            
+            # 2. 检查是否属于 Embedding 或 Head -> 必须用 AdamW
+            # 只要参数名包含上述关键词之一，就归入 AdamW
+            is_embed_or_head = any(k in name for k in embedding_or_head_keywords)
+            
+            if is_embed_or_head:
+                adamw_params.append(p)
+            else:
+                # 3. 剩下的所有 2D+ 矩阵 (Attention权重, Conv权重, Linear权重) -> 用 Muon
+                # 这包括 season_net.encoder, fusion_layer 等
+                muon_params.append(p)
+                # 可选：打印一下确认被分到 Muon 的参数
+                print(f"Muon optimizing: {name} | shape: {p.shape}")
+
+        # 构建参数组
+        param_groups = [
+            # Muon 组：通常学习率较高 (如 0.02)
+            dict(params=muon_params, use_muon=True, lr=lr_muon, weight_decay=weight_decay),
+            
+            # AdamW 组：处理剩下的所有参数，标准学习率 (如 3e-4)
+            dict(params=adamw_params, use_muon=False, lr=lr_adam, weight_decay=weight_decay, betas=(0.90, 0.95))
+        ]
+
+        # 初始化优化器
+        optimizer = MuonWithAuxAdam(param_groups)
+        
+        return optimizer
 
     def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
-        return model_optim
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=3e-4, betas=(0.90, 0.95), weight_decay=0.01)
+        # model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        return optimizer
 
     def _select_criterion(self):
         criterion = nn.MSELoss()
@@ -79,7 +139,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         self.model.train()
         return total_loss
 
-    def train(self, setting):
+    def train(self, setting):        
         train_data, train_loader = self._get_data(flag='train')
         vali_data, vali_loader = self._get_data(flag='val')
         test_data, test_loader = self._get_data(flag='test')
@@ -147,6 +207,8 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                     train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:
+                    if self.logger is not None:
+                        self.logger.log({"train/loss": loss.item()})
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
                     left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
@@ -166,6 +228,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
             test_loss = self.vali(test_data, test_loader, criterion)
+            if self.logger is not None:
+                self.logger.log({
+                                    "train/epoch_loss": train_loss, 
+                                    "val/epoch_loss": vali_loss, 
+                                    "test/epoch_loss": test_loss
+                                })
 
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
@@ -247,8 +315,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
                         input = test_data.inverse_transform(input.squeeze(0)).reshape(shape)
                     gt = np.concatenate((input[0, :, -1], true[0, :, -1]), axis=0)
                     pd = np.concatenate((input[0, :, -1], pred[0, :, -1]), axis=0)
-                    visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
-
+                    if self.logger is None:
+                        visual(gt, pd, os.path.join(folder_path, str(i) + '.pdf'))
+                    else:
+                        fig = create_plot_figure(gt, pd, title_suffix=str(i))
+                        self.logger and self.logger.log({f"test/forecast_{i}": wandb.Image(fig, caption=f"Forecast Result {i}")})
+                        plt.close()
         preds = np.array(preds)
         trues = np.array(trues)
         print('test shape:', preds.shape, trues.shape)
@@ -261,12 +333,12 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
             
-        if not os.path.exists(self.args.log_path):
-            os.makedirs(self.args.log_path)
+        if not os.path.exists(self.args.log_dir):
+            os.makedirs(self.args.log_dir)
 
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}'.format(mse, mae))
-        f = open(f"{self.args.log_path}/{self.args.des}_result_long_term_forecast.log", 'a')
+        f = open(f"{self.args.log_dir}/{self.args.des}_result_long_term_forecast.log", 'a')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}'.format(mse, mae))
         f.write('\n')

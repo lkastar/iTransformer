@@ -19,6 +19,11 @@ if __name__ == '__main__':
     parser.add_argument('--model', type=str, required=True, default='iTransformer',
                         help='model name, options: [iTransformer, iInformer, iReformer, iFlowformer, iFlashformer]')
 
+    # logger
+    parser.add_argument('--log_dir', type=str, help='directory to save logs', default='logs')
+    parser.add_argument('--use_wandb', action='store_true', help='use wandb to log results', default=True)
+    parser.add_argument('--wandb_project', type=str, default='itrans-mod-training', help='wandb project name')
+
     # data loader
     parser.add_argument('--data', type=str, required=True, default='custom', help='dataset type')
     parser.add_argument('--root_path', type=str, default='./data/electricity/', help='root path of the data file')
@@ -29,7 +34,6 @@ if __name__ == '__main__':
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
     parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
-    parser.add_argument('--log_path', type=str, default='./logs/', help='location of model checkpoints')
 
     # forecasting task
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
@@ -104,7 +108,6 @@ if __name__ == '__main__':
         Exp = Exp_Long_Term_Forecast_Partial
     else: # MTSF: multivariate time series forecasting
         Exp = Exp_Long_Term_Forecast
-
 
     if args.is_training:
         for ii in range(args.itr):
