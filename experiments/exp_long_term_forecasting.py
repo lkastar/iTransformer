@@ -23,8 +23,13 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         
         if args.use_wandb:
             self.logger = wandb.init(
-                project=args.wandb_project, 
-                name=f"{args.des}_{args.model_id}")
+                    project=args.wandb_project, 
+                    name=f"{args.des}_{args.model_id}",
+                    tags=[args.model_id, args.model, args.model_id.split('-')[0]],
+                    group=args.model,
+                    notes=getattr(args, 'wandb_notes', None)
+                )
+                
 
     def _build_model(self):
         model = self.model_dict[self.args.model].Model(self.args).float()
