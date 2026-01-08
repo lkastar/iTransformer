@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     # logger
     parser.add_argument('--log_dir', type=str, help='directory to save logs', default='logs')
-    parser.add_argument('--use_wandb', action='store_true', help='use wandb to log results', default=True)
+    parser.add_argument('--use_wandb', action='store_true', help='use wandb to log results', default=False)
     parser.add_argument('--wandb_project', type=str, default='itrans-mod-training', help='wandb project name')
 
     # data loader

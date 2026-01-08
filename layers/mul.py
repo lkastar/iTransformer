@@ -117,6 +117,8 @@ class MultiResSeasonalEmbedding(nn.Module):
         Input: [Batch, Variate, Time] (通常是 Decomp 后的 Seasonal 成分)
         Output: [Batch, Variate, d_model]
         """
+        x = x.permute(0, 2, 1)  # [B, N, L]
+        
         self._weight_cache = {} # 清空缓存 (若 target_lengths 固定，其实可以不以 batch 为单位清空，但在训练中为了梯度安全通常清空)
         
         # 1. 多尺度重采样 (Pyramid Resampling)

@@ -28,7 +28,8 @@ class Model(nn.Module):
         
         seasonal_init, trend_init = self.decomp(x_enc)
         # [B, L, C] -> [B, C, L]
-        seasonal_init, trend_init = seasonal_init.permute(0, 2, 1), trend_init.permute(0, 2, 1)  # [B, C, L]
+        # seasonal_init暂时适配iTransformer的输入格式
+        trend_init = trend_init.permute(0, 2, 1)  # [B, C, L]
         
         x_trend = self.trend_net(trend_init) # [B, L, C]
         x_seasonal = self.season_net(seasonal_init) # [B, L, C]
@@ -55,7 +56,7 @@ class SeasonFlow(nn.Module):
         self.enc_embedding = DataEmbedding_inverted(configs.seq_len, configs.d_model, configs.embed, configs.freq,
                                                     configs.dropout)
         
-        self.pa_embedding = PAEmbedding(configs.d_model)
+        # self.pa_embedding = PAEmbedding(configs.d_model)
         
         self.mul_embedding = MultiResSeasonalEmbedding(
             d_model=configs.d_model,
@@ -63,7 +64,7 @@ class SeasonFlow(nn.Module):
             anchor_len=configs.seq_len // 2
         )
         
-        self.class_strategy = configs.class_strategy
+        # self.class_strategy = configs.class_strategy
         # Encoder-only architecture
         self.encoder = Encoder(
             [
@@ -93,13 +94,13 @@ class SeasonFlow(nn.Module):
         # NOTE 简单的时间戳特征影响模型性能
         # NOTE iTransformer的invert操作在Embedding阶段完成
         # NOTE [B, L, N] -> [B, N, D] 在变量维度上进行Embedding
-        # enc_out = self.enc_embedding(x_enc, None) # covariates (e.g timestamp) can be also embedded as tokens
+        # enc_out = self.enc_embedding(x=x_enc, x_mark=None) # covariates (e.g timestamp) can be also embedded as tokens
         # x_enc = self.pa_embedding(x_enc)
-        x_enc = self.mul_embedding(x_enc)  # [B, N, D]
+        enc_out = self.mul_embedding(x_enc)  # [B, N, D]
         
         # B N E -> B N E                (B L E -> B L E in the vanilla Transformer)
         # the dimensions of embedded time series has been inverted, and then processed by native attn, layernorm and ffn modules
-        enc_out, attns = self.encoder(x_enc, attn_mask=None)
+        enc_out, attns = self.encoder(enc_out, attn_mask=None)
 
         return enc_out, attns
     
