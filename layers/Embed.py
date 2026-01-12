@@ -1,3 +1,4 @@
+from einops import rearrange
 import torch
 import torch.nn as nn
 import math
@@ -131,7 +132,11 @@ class DataEmbedding_inverted(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, x, x_mark):
-        x = x.permute(0, 2, 1)
+        """
+        :param x: [B, L, C]
+        """
+        # x = x.permute(0, 2, 1)
+        x = rearrange(x, 'b l c -> b c l')
         # x: [Batch Variate Time]
         if x_mark is None:
             x = self.value_embedding(x)

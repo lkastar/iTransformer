@@ -2,6 +2,7 @@ export CUDA_VISIBLE_DEVICES=0
 
 model_name=Testformer
 desc=${1:-Baseline}
+notes=${2:-Test}
 
 python -u run.py \
   --is_training 1 \
@@ -20,7 +21,12 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
-  --itr 1
+  --itr 1 \
+  --loss mae \
+  --train_epochs 30 \
+  --patience 5 \
+  --wandb_notes "$notes" \
+  --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -39,7 +45,12 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
-  --itr 1
+  --itr 1\
+  --loss mae \
+  --train_epochs 30 \
+  --patience 5 \
+  --wandb_notes "$notes" \
+  --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -58,7 +69,12 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
-  --itr 1
+  --itr 1\
+  --loss mae \
+  --train_epochs 30 \
+  --patience 5 \
+  --wandb_notes "$notes" \
+  --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -77,4 +93,9 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
-  --itr 1
+  --itr 1\
+  --loss mae \
+  --train_epochs 30 \
+  --patience 5 \
+  --wandb_notes "$notes" \
+  --use_wandb

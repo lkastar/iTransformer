@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn.functional import gumbel_softmax
 import numpy as np
 from math import sqrt
 from utils.masking import TriangularCausalMask, ProbMask
@@ -329,3 +330,70 @@ class ReformerLayer(nn.Module):
         queries = self.attn(self.fit_length(queries))[:, :N, :]
         return queries, None
 
+
+class Mahalanobis_mask(nn.Module):
+    """
+    FROM https://github.com/decisionintelligence/DUET
+    """
+    def __init__(self, input_size):
+        super(Mahalanobis_mask, self).__init__()
+        frequency_size = input_size // 2 + 1
+        self.A = nn.Parameter(torch.randn(frequency_size, frequency_size), requires_grad=True)
+
+    def calculate_prob_distance(self, X):
+        XF = torch.abs(torch.fft.rfft(X, dim=-1))
+        X1 = XF.unsqueeze(2)
+        X2 = XF.unsqueeze(1)
+
+        # B x C x C x D
+        diff = X1 - X2
+
+        temp = torch.einsum("dk,bxck->bxcd", self.A, diff)
+
+        dist = torch.einsum("bxcd,bxcd->bxc", temp, temp)
+
+        # exp_dist = torch.exp(-dist)
+        exp_dist = 1 / (dist + 1e-10)
+        # 对角线置零
+
+        identity_matrices = 1 - torch.eye(exp_dist.shape[-1])
+        mask = identity_matrices.repeat(exp_dist.shape[0], 1, 1).to(exp_dist.device)
+        exp_dist = torch.einsum("bxc,bxc->bxc", exp_dist, mask)
+        exp_max, _ = torch.max(exp_dist, dim=-1, keepdim=True)
+        exp_max = exp_max.detach()
+
+        # B x C x C
+        p = exp_dist / exp_max
+
+        identity_matrices = torch.eye(p.shape[-1])
+        p1 = torch.einsum("bxc,bxc->bxc", p, mask)
+
+        diag = identity_matrices.repeat(p.shape[0], 1, 1).to(p.device)
+        p = (p1 + diag) * 0.99
+
+        return p
+
+    def bernoulli_gumbel_rsample(self, distribution_matrix):
+        b, c, d = distribution_matrix.shape
+
+        flatten_matrix = rearrange(distribution_matrix, 'b c d -> (b c d) 1')
+        r_flatten_matrix = 1 - flatten_matrix
+
+        log_flatten_matrix = torch.log(flatten_matrix / r_flatten_matrix)
+        log_r_flatten_matrix = torch.log(r_flatten_matrix / flatten_matrix)
+
+        new_matrix = torch.concat([log_flatten_matrix, log_r_flatten_matrix], dim=-1)
+        resample_matrix = gumbel_softmax(new_matrix, hard=True)
+
+        resample_matrix = rearrange(resample_matrix[..., 0], '(b c d) -> b c d', b=b, c=c, d=d)
+        return resample_matrix
+
+    def forward(self, X):
+        p = self.calculate_prob_distance(X)
+
+        # bernoulli中两个通道有关系的概率
+        sample = self.bernoulli_gumbel_rsample(p)
+
+        mask = sample.unsqueeze(1)
+        cnt = torch.sum(mask, dim=-1)
+        return mask

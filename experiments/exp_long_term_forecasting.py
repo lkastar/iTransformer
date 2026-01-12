@@ -48,7 +48,14 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         return model_optim
 
     def _select_criterion(self):
-        criterion = nn.MSELoss()
+        if self.args.loss.lower() == 'mse':
+            criterion = nn.MSELoss()
+        elif self.args.loss.lower() =='mae':
+            criterion = nn.L1Loss()
+        else:
+            print(f"Unknown loss function: {self.args.loss}")
+            raise ValueError(f"Unknown loss function: {self.args.loss}")
+        
         return criterion
 
     def vali(self, vali_data, vali_loader, criterion):
@@ -294,6 +301,7 @@ class Exp_Long_Term_Forecast(Exp_Basic):
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}'.format(mse, mae))
         f = open(f"{self.args.log_dir}/{self.args.des}_result_long_term_forecast.log", 'a')
+        f.write('\nRUN INFO: ⌛️' + time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + ' 📒：' + getattr(self.args, 'wandb_notes', 'None') + '\n')
         f.write(setting + "  \n")
         f.write('mse:{}, mae:{}'.format(mse, mae))
         f.write('\n')

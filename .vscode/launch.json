@@ -28,7 +28,7 @@
                 "--d_ff", "256",
                 "--itr", "1",
                 "--des", "Dbg",
-                "--use_wandb",
+                // "--use_wandb",
             ]
         }
     ]
