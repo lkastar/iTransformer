@@ -23,8 +23,8 @@ python -u run.py \
   --d_model 128 \
   --d_ff 128 \
   --itr 1 \
-  --train_epochs 30 \
-  --patience 5 \
+  --train_epochs 50 \
+  --patience 10 \
   --wandb_notes "$notes" \
   --use_wandb
 
@@ -46,8 +46,8 @@ python -u run.py \
   --d_model 128 \
   --d_ff 128 \
   --itr 1 \
-  --train_epochs 30 \
-  --patience 5 \
+  --train_epochs 50 \
+  --patience 10 \
   --wandb_notes "$notes" \
   --use_wandb
 
@@ -69,8 +69,8 @@ python -u run.py \
   --d_model 128 \
   --d_ff 128 \
   --itr 1 \
-  --train_epochs 30 \
-  --patience 5 \
+  --train_epochs 50 \
+  --patience 10 \
   --wandb_notes "$notes" \
   --use_wandb
 
@@ -92,7 +92,7 @@ python -u run.py \
   --d_model 128 \
   --d_ff 128 \
   --itr 1 \
-  --train_epochs 30 \
-  --patience 5 \
+  --train_epochs 50 \
+  --patience 10 \
   --wandb_notes "$notes" \
   --use_wandb

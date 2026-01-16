@@ -26,7 +26,7 @@ python -u run.py \
   --train_epochs 30 \
   --patience 5 \
   --wandb_notes "$notes" \
-  # --use_wandb
+#   --use_wandb
 
 # python -u run.py \
 #   --is_training 1 \
@@ -47,8 +47,8 @@ python -u run.py \
 #   --d_ff 256 \
 #   --itr 1 \
 #   --loss mae \
-#   --train_epochs 30 \
-#   --patience 5 \
+#   --train_epochs 50 \
+#   --patience 10 \
 #   --wandb_notes "$notes" \
 #   --use_wandb
 
@@ -71,8 +71,8 @@ python -u run.py \
 #   --d_ff 512 \
 #   --itr 1 \
 #   --loss mae \
-#   --train_epochs 30 \
-#   --patience 5 \
+#   --train_epochs 50 \
+#   --patience 10 \
 #   --wandb_notes "$notes" \
 #   --use_wandb
 
@@ -95,7 +95,7 @@ python -u run.py \
 #   --d_ff 512 \
 #   --itr 1 \
 #   --loss mae \
-#   --train_epochs 30 \
-#   --patience 5 \
+#   --train_epochs 50 \
+#   --patience 10 \
 #   --wandb_notes "$notes" \
 #   --use_wandb
