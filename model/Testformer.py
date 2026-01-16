@@ -6,7 +6,7 @@ from layers.StandardNorm import Normalize
 from layers.TrendFlow import TrendFlow
 from layers.SeasonFlow import SeasonFlow
 from layers.masked_attention import Mahalanobis_mask
-
+# from layers.MDM import MDM
 
 
 class Model(nn.Module):
@@ -15,6 +15,7 @@ class Model(nn.Module):
         super(Model, self).__init__()
         
         self.config = config
+        # self.mdm = MDM((config.seq_len, config.enc_in))
         self.decomp = Decomp(alpha)
         self.normlizer = Normalize(config.enc_in, affine=True)
         # self.trend_net = nn.Linear(config.seq_len, config.d_model)
@@ -42,6 +43,7 @@ class Model(nn.Module):
         # x_enc: [B, L, C]
         x_enc = self.normlizer(x_enc, mode='norm')
         mah_mask = self.mask_generator(rearrange(x_enc, 'b l c -> b c l'))
+        # x_enc = rearrange(self.mdm(rearrange(x_enc, 'b l c -> b c l')), 'b c l -> b l c')
         
         seasonal_init, trend_init = self.decomp(x_enc)
         

@@ -72,6 +72,47 @@ class TrendFlow(nn.Module):
         return x
 
 
+class TrendFlowRepr(nn.Module):
+    """
+    Trend representation network (Channel Independence).
+    Input : [B, L, C]
+    Output: [B, C, D] where D=d_model
+    """
+    def __init__(self, seq_len: int, d_model: int, hidden_ratio: int = 4, dropout: float = 0.1):
+        super().__init__()
+        self.seq_len = seq_len
+        self.d_model = d_model
+
+        hidden_dim = d_model * hidden_ratio
+
+        self.layer1 = nn.Sequential(
+            nn.Linear(seq_len, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_dim),
+        )
+        self.layer2 = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.GELU(),
+            nn.Dropout(dropout),
+            nn.LayerNorm(hidden_dim),
+        )
+        self.head = nn.Linear(hidden_dim, d_model)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        x: [B, L, C]
+        return: [B, C, D]
+        """
+        B, L, C = x.shape
+        x = x.permute(0, 2, 1).reshape(B * C, L)  # [B*C, L]
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.head(x)                          # [B*C, D]
+        x = x.reshape(B, C, self.d_model)         # [B, C, D]
+        return x
+
+
 # non-linear patch style (from xPatch)
 # class TrendFlow(nn.Module):
 #     """

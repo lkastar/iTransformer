@@ -146,3 +146,33 @@ class DataEmbedding_inverted(nn.Module):
         # x: [Batch Variate d_model]
         return self.dropout(x)
 
+
+class RotaryEmbedding(nn.Module):
+    def __init__(self, dim, max_len=5000):
+        super(RotaryEmbedding, self).__init__()
+        self.dim = dim
+        self.dim_even = dim - (dim % 2)
+        inv_freq = 1.0 / (10000 ** (torch.arange(0, self.dim_even, 2).float() / self.dim_even))
+        self.register_buffer('inv_freq', inv_freq)
+
+    def forward(self, x):
+        # x: [b, l, c]
+        seq_len = x.shape[1]
+        x_process = x[..., :self.dim_even]
+        
+        t = torch.arange(seq_len, device=x.device).type_as(self.inv_freq)
+        freqs = torch.einsum('i,j->ij', t, self.inv_freq)
+        emb = torch.cat((freqs, freqs), dim=-1) # [l, c]
+        
+        # apply rotary embedding
+        x_rot = self.rotate_half(x_process)
+        x_out = (x_process * emb.cos()) + (x_rot * emb.sin())
+        
+        if self.dim % 2 == 1:
+            return torch.cat([x_out, x[..., -1:]], dim=-1)
+        return x_out
+
+    def rotate_half(self, x):
+        x1, x2 = x[..., :x.shape[-1]//2], x[..., x.shape[-1]//2:]
+        return torch.cat((-x2, x1), dim=-1)
+
