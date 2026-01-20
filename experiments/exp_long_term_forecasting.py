@@ -11,7 +11,6 @@ import time
 import warnings
 import numpy as np
 import matplotlib.pyplot as plt
-from muon import MuonWithAuxAdam
 
 warnings.filterwarnings('ignore')
 
