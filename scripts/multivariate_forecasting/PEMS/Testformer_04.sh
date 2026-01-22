@@ -21,6 +21,7 @@ python -u run.py \
   --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --use_norm 0 \
@@ -44,6 +45,7 @@ python -u run.py \
   --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --use_norm 0 \
@@ -67,6 +69,7 @@ python -u run.py \
   --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --use_norm 0 \
@@ -90,6 +93,7 @@ python -u run.py \
   --des $desc \
   --d_model 1024 \
   --d_ff 1024 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --use_norm 0 \

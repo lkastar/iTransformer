@@ -21,11 +21,12 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --train_epochs 50 \
   --patience 10 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -44,11 +45,12 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --train_epochs 50 \
   --patience 10 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -67,11 +69,12 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --train_epochs 50 \
   --patience 10 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -90,8 +93,9 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --train_epochs 50 \
   --patience 10 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb

@@ -21,6 +21,7 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --wandb_notes "$notes" \
   --use_wandb
@@ -42,6 +43,7 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --wandb_notes "$notes" \
   --use_wandb
@@ -64,6 +66,7 @@ python -u run.py \
   --itr 1 \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --train_epochs 1 \
   --wandb_notes "$notes" \
   --use_wandb
@@ -85,6 +88,7 @@ python -u run.py \
   --des $desc \
   --d_model 128 \
   --d_ff 128 \
+  --loss DBLoss \
   --itr 1 \
   --wandb_notes "$notes" \
   --use_wandb

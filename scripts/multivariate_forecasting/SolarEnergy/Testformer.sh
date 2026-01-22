@@ -21,6 +21,7 @@ python -u run.py \
   --des $desc \
   --d_model 512 \
   --d_ff 512 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
@@ -43,6 +44,7 @@ python -u run.py \
   --des $desc \
   --d_model 512 \
   --d_ff 512 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
@@ -65,6 +67,7 @@ python -u run.py \
   --des $desc \
   --d_model 512 \
   --d_ff 512 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
@@ -87,6 +90,7 @@ python -u run.py \
   --des $desc \
   --d_model 512 \
   --d_ff 512 \
+  --loss DBLoss \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \

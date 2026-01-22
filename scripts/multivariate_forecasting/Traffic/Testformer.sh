@@ -21,6 +21,7 @@ python -u run.py \
   --des $desc \
   --d_model 512\
   --d_ff 512 \
+  --loss DBLoss \
   --batch_size 16 \
   --learning_rate 0.001 \
   --itr 1 \
@@ -44,6 +45,7 @@ python -u run.py \
   --des $desc \
   --d_model 512 \
   --d_ff 512 \
+  --loss DBLoss \
   --batch_size 16 \
   --learning_rate 0.001 \
   --itr 1 \
@@ -67,6 +69,7 @@ python -u run.py \
   --des $desc \
   --d_model 512\
   --d_ff 512 \
+  --loss DBLoss \
   --batch_size 16 \
   --learning_rate 0.001 \
   --itr 1 \
@@ -90,6 +93,7 @@ python -u run.py \
   --des $desc \
   --d_model 512 \
   --d_ff 512 \
+  --loss DBLoss \
   --batch_size 16 \
   --learning_rate 0.001\
   --itr 1 \
