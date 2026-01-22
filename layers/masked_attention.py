@@ -138,27 +138,104 @@ class AttentionLayer(nn.Module):
 
 
 class Mahalanobis_mask(nn.Module):
-    def __init__(self, input_size):
+    """
+    使用可学习小波卷积进行多尺度特征提取的 Mahalanobis 距离掩码生成器。
+    相比 FFT，小波变换能同时保留时间和频率信息，更适合非平稳时间序列。
+    """
+    def __init__(self, input_size, n_scales=4):
         super(Mahalanobis_mask, self).__init__()
-        frequency_size = input_size // 2 + 1
-        self.A = nn.Parameter(torch.randn(frequency_size, frequency_size), requires_grad=True)
-
+        self.n_scales = n_scales
+        self.input_size = input_size
+        
+        # 可学习的多尺度小波滤波器
+        # 每个尺度使用不同大小的卷积核和步长，模拟小波的多分辨率分析
+        self.wavelet_filters = nn.ModuleList()
+        feature_sizes = []
+        
+        for i in range(n_scales):
+            kernel_size = 2 ** (i + 1)  # 2, 4, 8, 16...
+            stride = 2 ** i  # 1, 2, 4, 8...
+            padding = kernel_size // 2
+            
+            # 计算该尺度输出的特征长度
+            out_size = (input_size + 2 * padding - kernel_size) // stride + 1
+            feature_sizes.append(out_size)
+            
+            self.wavelet_filters.append(
+                nn.Conv1d(1, 1, kernel_size=kernel_size, stride=stride, 
+                         padding=padding, bias=False)
+            )
+        
+        # 初始化滤波器权重为类小波形态
+        self._init_wavelet_weights()
+        
+        # 总特征维度
+        total_feature_size = sum(feature_sizes)
+        self.A = nn.Parameter(torch.randn(total_feature_size, total_feature_size), 
+                             requires_grad=True)
+        
+        # 缩放因子，帮助稳定训练
+        nn.init.xavier_normal_(self.A)
+    
+    def _init_wavelet_weights(self):
+        """初始化滤波器权重为类Haar小波形态"""
+        for i, conv in enumerate(self.wavelet_filters):
+            kernel_size = conv.kernel_size[0]
+            half = kernel_size // 2
+            
+            # 模拟 Haar 小波：前半部分为正，后半部分为负
+            weight = torch.zeros(1, 1, kernel_size)
+            weight[0, 0, :half] = 1.0 / half
+            weight[0, 0, half:] = -1.0 / half
+            conv.weight.data = weight
+    
+    def wavelet_transform(self, X):
+        """
+        可学习的多尺度小波变换
+        
+        Args:
+            X: [B, C, L] 输入时间序列
+            
+        Returns:
+            [B, C, total_coeffs] 多尺度小波系数
+        """
+        B, C, L = X.shape
+        X_flat = X.contiguous().view(B * C, 1, L)  # [B*C, 1, L]
+        
+        coeffs = []
+        for wavelet_filter in self.wavelet_filters:
+            coeff = wavelet_filter(X_flat)  # [B*C, 1, out_size]
+            coeffs.append(coeff.view(B, C, -1))
+        
+        # 拼接所有尺度的系数
+        return torch.cat(coeffs, dim=-1)  # [B, C, total_coeffs]
+    
     def calculate_prob_distance(self, X):
-        XF = torch.abs(torch.fft.rfft(X, dim=-1))
-        X1 = XF.unsqueeze(2)
-        X2 = XF.unsqueeze(1)
-
+        """
+        计算基于小波系数的马氏距离概率
+        
+        Args:
+            X: [B, C, L] 输入时间序列
+            
+        Returns:
+            [B, C, C] 概率距离矩阵
+        """
+        # 使用小波变换提取多尺度特征
+        XW = torch.abs(self.wavelet_transform(X))  # [B, C, coeffs_len]
+        
+        X1 = XW.unsqueeze(2)  # [B, C, 1, coeffs_len]
+        X2 = XW.unsqueeze(1)  # [B, 1, C, coeffs_len]
+        
         # B x C x C x D
         diff = X1 - X2
-
+        
         temp = torch.einsum("dk,bxck->bxcd", self.A, diff)
-
         dist = torch.einsum("bxcd,bxcd->bxc", temp, temp)
-
-        # exp_dist = torch.exp(-dist)
+        
+        # 转换为相似度
         exp_dist = 1 / (dist + 1e-10)
+        
         # 对角线置零
-
         identity_matrices = 1 - torch.eye(exp_dist.shape[-1])
         mask = identity_matrices.repeat(exp_dist.shape[0], 1, 1).to(exp_dist.device)
         exp_dist = torch.einsum("bxc,bxc->bxc", exp_dist, mask)
@@ -177,6 +254,7 @@ class Mahalanobis_mask(nn.Module):
         return p
 
     def bernoulli_gumbel_rsample(self, distribution_matrix):
+        """Gumbel-Softmax 重参数化采样"""
         b, c, d = distribution_matrix.shape
 
         flatten_matrix = rearrange(distribution_matrix, 'b c d -> (b c d) 1')
@@ -192,6 +270,15 @@ class Mahalanobis_mask(nn.Module):
         return resample_matrix
 
     def forward(self, X):
+        """
+        前向传播
+        
+        Args:
+            X: [B, C, L] 输入时间序列
+            
+        Returns:
+            mask: [B, 1, C, C] 采样得到的通道关系掩码
+        """
         p = self.calculate_prob_distance(X)
 
         # bernoulli中两个通道有关系的概率

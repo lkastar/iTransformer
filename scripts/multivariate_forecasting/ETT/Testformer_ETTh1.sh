@@ -4,7 +4,7 @@ model_name=Testformer
 desc=${1:-Baseline}
 notes=${2:-Test}
 
-python -u run.py \
+python3 -u run.py \
   --is_training 1 \
   --root_path ./dataset/ETT-small/ \
   --data_path ETTh1.csv \
@@ -22,13 +22,17 @@ python -u run.py \
   --d_model 256 \
   --d_ff 128 \
   --itr 1 \
-  --loss mae \
+  --batch_size 16 \
+  --loss DBLoss \
+  --ema_alpha 0.3 \
+  --ema_trend_weight 0.6 \
+  --ema_seasonal_weight 0.4 \
   --train_epochs 30 \
   --patience 5 \
   --wandb_notes "$notes" \
 #   --use_wandb
 
-# python -u run.py \
+# python3 -u run.py \
 #   --is_training 1 \
 #   --root_path ./dataset/ETT-small/ \
 #   --data_path ETTh1.csv \
@@ -52,7 +56,7 @@ python -u run.py \
 #   --wandb_notes "$notes" \
 #   --use_wandb
 
-# python -u run.py \
+# python3 -u run.py \
 #   --is_training 1 \
 #   --root_path ./dataset/ETT-small/ \
 #   --data_path ETTh1.csv \
@@ -76,7 +80,7 @@ python -u run.py \
 #   --wandb_notes "$notes" \
 #   --use_wandb
 
-# python -u run.py \
+# python3 -u run.py \
 #   --is_training 1 \
 #   --root_path ./dataset/ETT-small/ \
 #   --data_path ETTh1.csv \

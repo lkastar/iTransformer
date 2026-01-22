@@ -51,6 +51,29 @@ class Exp_Long_Term_Forecast(Exp_Basic):
             criterion = nn.MSELoss()
         elif self.args.loss.lower() =='mae':
             criterion = nn.L1Loss()
+        elif self.args.loss.lower() == 'dbloss':
+            from utils.losses import DBLoss
+            criterion = DBLoss(alpha=0.3, beta=0.6)
+        elif self.args.loss.lower() == 'emadecomp':
+            from utils.losses import EMADecomposedLoss
+            # Get alpha from args or use default
+            alpha = getattr(self.args, 'ema_alpha', 0.2)
+            trend_weight = getattr(self.args, 'ema_trend_weight', 1.0)
+            seasonal_weight = getattr(self.args, 'ema_seasonal_weight', 1.0)
+            
+            # Get base loss type (default to MSE)
+            base_loss_type = getattr(self.args, 'ema_base_loss', 'mse').lower()
+            if base_loss_type == 'mae':
+                base_loss = nn.L1Loss()
+            else:
+                base_loss = nn.MSELoss()
+            
+            criterion = EMADecomposedLoss(
+                alpha=alpha,
+                trend_weight=trend_weight,
+                seasonal_weight=seasonal_weight,
+                base_loss=base_loss
+            )
         else:
             print(f"Unknown loss function: {self.args.loss}")
             raise ValueError(f"Unknown loss function: {self.args.loss}")
