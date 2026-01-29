@@ -24,7 +24,7 @@ python -u run.py \
   --loss DBLoss \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -46,7 +46,7 @@ python -u run.py \
   --loss DBLoss \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -69,7 +69,7 @@ python -u run.py \
   --loss DBLoss \
   --train_epochs 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -91,4 +91,4 @@ python -u run.py \
   --loss DBLoss \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb

@@ -25,7 +25,7 @@ python -u run.py \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -48,7 +48,7 @@ python -u run.py \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -71,7 +71,7 @@ python -u run.py \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb
 
 python -u run.py \
   --is_training 1 \
@@ -94,4 +94,4 @@ python -u run.py \
   --learning_rate 0.0005 \
   --itr 1 \
   --wandb_notes "$notes" \
-  --use_wandb
+  # --use_wandb

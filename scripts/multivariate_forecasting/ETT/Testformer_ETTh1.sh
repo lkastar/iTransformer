@@ -1,105 +1,105 @@
-export CUDA_VISIBLE_DEVICES=0
+# export CUDA_VISIBLE_DEVICES=0
 
-model_name=Testformer
-desc=${1:-Baseline}
-notes=${2:-Test}
+# model_name=Testformer
+# desc=${1:-Baseline}
+# notes=${2:-Test}
 
-python3 -u run.py \
-  --is_training 1 \
-  --root_path ./dataset/ETT-small/ \
-  --data_path ETTh1.csv \
-  --model_id ETTh1_96_96 \
-  --model $model_name \
-  --data ETTh1 \
-  --features M \
-  --seq_len 96 \
-  --pred_len 96 \
-  --e_layers 2 \
-  --enc_in 7 \
-  --dec_in 7 \
-  --c_out 7 \
-  --des $desc \
-  --d_model 256 \
-  --d_ff 128 \
-  --itr 1 \
-  --batch_size 16 \
-  --loss DBLoss \
-  --ema_alpha 0.3 \
-  --ema_trend_weight 0.6 \
-  --ema_seasonal_weight 0.4 \
-  --train_epochs 30 \
-  --patience 5 \
-  --wandb_notes "$notes" \
-  # --use_wandb
+# python3 -u run.py \
+#   --is_training 1 \
+#   --root_path ./dataset/ETT-small/ \
+#   --data_path ETTh1.csv \
+#   --model_id ETTh1_96_96 \
+#   --model $model_name \
+#   --data ETTh1 \
+#   --features M \
+#   --seq_len 96 \
+#   --pred_len 96 \
+#   --e_layers 2 \
+#   --enc_in 7 \
+#   --dec_in 7 \
+#   --c_out 7 \
+#   --des $desc \
+#   --d_model 256 \
+#   --d_ff 128 \
+#   --itr 1 \
+#   --batch_size 16 \
+#   --loss DBLoss \
+#   --ema_alpha 0.3 \
+#   --ema_trend_weight 0.6 \
+#   --ema_seasonal_weight 0.4 \
+#   --train_epochs 30 \
+#   --patience 5 \
+#   --wandb_notes "$notes" \
+#   # --use_wandb
 
-python3 -u run.py \
-  --is_training 1 \
-  --root_path ./dataset/ETT-small/ \
-  --data_path ETTh1.csv \
-  --model_id ETTh1_96_192 \
-  --model $model_name \
-  --data ETTh1 \
-  --features M \
-  --seq_len 96 \
-  --pred_len 192 \
-  --e_layers 2 \
-  --enc_in 7 \
-  --dec_in 7 \
-  --c_out 7 \
-  --des $desc \
-  --d_model 256 \
-  --d_ff 256 \
-  --itr 1 \
-  --loss DBLoss \
-  --train_epochs 50 \
-  --patience 10 \
-  --wandb_notes "$notes" \
-  # --use_wandb
+# python3 -u run.py \
+#   --is_training 1 \
+#   --root_path ./dataset/ETT-small/ \
+#   --data_path ETTh1.csv \
+#   --model_id ETTh1_96_192 \
+#   --model $model_name \
+#   --data ETTh1 \
+#   --features M \
+#   --seq_len 96 \
+#   --pred_len 192 \
+#   --e_layers 2 \
+#   --enc_in 7 \
+#   --dec_in 7 \
+#   --c_out 7 \
+#   --des $desc \
+#   --d_model 256 \
+#   --d_ff 256 \
+#   --itr 1 \
+#   --loss DBLoss \
+#   --train_epochs 50 \
+#   --patience 10 \
+#   --wandb_notes "$notes" \
+#   # --use_wandb
 
-python3 -u run.py \
-  --is_training 1 \
-  --root_path ./dataset/ETT-small/ \
-  --data_path ETTh1.csv \
-  --model_id ETTh1_96_336 \
-  --model $model_name \
-  --data ETTh1 \
-  --features M \
-  --seq_len 96 \
-  --pred_len 336 \
-  --e_layers 2 \
-  --enc_in 7 \
-  --dec_in 7 \
-  --c_out 7 \
-  --des $desc \
-  --d_model 512 \
-  --d_ff 512 \
-  --itr 1 \
-  --loss DBLoss \
-  --train_epochs 50 \
-  --patience 10 \
-  --wandb_notes "$notes" \
-  # --use_wandb
+# python3 -u run.py \
+#   --is_training 1 \
+#   --root_path ./dataset/ETT-small/ \
+#   --data_path ETTh1.csv \
+#   --model_id ETTh1_96_336 \
+#   --model $model_name \
+#   --data ETTh1 \
+#   --features M \
+#   --seq_len 96 \
+#   --pred_len 336 \
+#   --e_layers 2 \
+#   --enc_in 7 \
+#   --dec_in 7 \
+#   --c_out 7 \
+#   --des $desc \
+#   --d_model 512 \
+#   --d_ff 512 \
+#   --itr 1 \
+#   --loss DBLoss \
+#   --train_epochs 50 \
+#   --patience 10 \
+#   --wandb_notes "$notes" \
+#   # --use_wandb
 
-python3 -u run.py \
-  --is_training 1 \
-  --root_path ./dataset/ETT-small/ \
-  --data_path ETTh1.csv \
-  --model_id ETTh1_96_720 \
-  --model $model_name \
-  --data ETTh1 \
-  --features M \
-  --seq_len 96 \
-  --pred_len 720 \
-  --e_layers 2 \
-  --enc_in 7 \
-  --dec_in 7 \
-  --c_out 7 \
-  --des $desc \
-  --d_model 512 \
-  --d_ff 512 \
-  --itr 1 \
-  --loss DBLoss \
-  --train_epochs 50 \
-  --patience 10 \
-  --wandb_notes "$notes" \
-  # --use_wandb
+# python3 -u run.py \
+#   --is_training 1 \
+#   --root_path ./dataset/ETT-small/ \
+#   --data_path ETTh1.csv \
+#   --model_id ETTh1_96_720 \
+#   --model $model_name \
+#   --data ETTh1 \
+#   --features M \
+#   --seq_len 96 \
+#   --pred_len 720 \
+#   --e_layers 2 \
+#   --enc_in 7 \
+#   --dec_in 7 \
+#   --c_out 7 \
+#   --des $desc \
+#   --d_model 512 \
+#   --d_ff 512 \
+#   --itr 1 \
+#   --loss DBLoss \
+#   --train_epochs 50 \
+#   --patience 10 \
+#   --wandb_notes "$notes" \
+#   # --use_wandb
