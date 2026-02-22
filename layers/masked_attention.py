@@ -287,3 +287,85 @@ class Mahalanobis_mask(nn.Module):
         mask = sample.unsqueeze(1)
         cnt = torch.sum(mask, dim=-1)
         return mask
+
+
+class StaticGraph_mask(nn.Module):
+    """
+    基于图学习的全局静态 Mask 生成器 (Learnable Node Embeddings)
+    利用可学习的节点嵌入捕捉数据集中变量(通道)之间固有的、全局的有向关系。
+    """
+    def __init__(self, num_nodes, node_dim=32):
+        """
+        Args:
+            num_nodes: 变量的数量 (即通道数 Channel)
+            node_dim: 节点嵌入的维度，控制隐向量的表达能力 (通常设为 16, 32, 64)
+        """
+        super(StaticGraph_mask, self).__init__()
+        self.num_nodes = num_nodes
+        self.node_dim = node_dim
+        
+        # E1 代表主动影响 (Source)，E2 代表被动接受 (Target)
+        # 使用两套不同的 Embedding 可以计算出【非对称】的概率矩阵，符合真实世界的有向因果关系
+        self.node_emb1 = nn.Parameter(torch.empty(num_nodes, node_dim))
+        self.node_emb2 = nn.Parameter(torch.empty(num_nodes, node_dim))
+        
+        # 使用 Xavier Uniform 初始化，有助于稳定早期的梯度
+        nn.init.xavier_uniform_(self.node_emb1)
+        nn.init.xavier_uniform_(self.node_emb2)
+
+    def get_static_prob(self):
+        """
+        计算通道之间存在连接的全局静态概率
+        """
+        # 计算全连接图的 Logits: [C, node_dim] x [node_dim, C] -> [C, C]
+        adj_logits = torch.mm(self.node_emb1, self.node_emb2.transpose(0, 1))
+        
+        # 类似 Transformer 的 Scaled Dot-Product，缩放防止 Sigmoid 在初始阶段就饱和
+        adj_logits = adj_logits / (self.node_dim ** 0.5)
+        
+        # 转化为 0~1 的概率
+        p = torch.sigmoid(adj_logits)
+        
+        # 增加对角线约束（变量必须永远关注它自己本身）
+        identity = torch.eye(self.num_nodes, device=p.device)
+        # 对角线置为 0.99，其余保持不变
+        p = p * (1 - identity) + identity * 0.99 
+        
+        return p
+
+    def bernoulli_gumbel_rsample(self, p):
+        """优化版 Gumbel-Softmax 重参数化采样 (更稳定、原生)"""
+        # 截断极值，防止 log(0) 导致 NaN
+        p = torch.clamp(p, min=1e-5, max=1.0-1e-5)
+        
+        # 构建两类概率的对数：[保留(为1)的概率, 舍弃(为0)的概率]
+        # shape 变为 [C, C, 2]
+        log_p = torch.stack([torch.log(p), torch.log(1 - p)], dim=-1)
+        
+        # Gumbel Softmax 采样 (hard=True 保证前向传播输出绝对的 0 或 1，反向传播具有梯度)
+        # tau (温度系数) 可以在训练中逐渐退火，这里简化为常数 1.0
+        sample = F.gumbel_softmax(log_p, tau=1.0, hard=True)
+        
+        # 取出第一列 (对应 "保留为1") -> [C, C]
+        return sample[..., 0]
+
+    def forward(self, X):
+        """
+        Args:
+            X: [B, C, L] 虽然静态图不依赖 X 的内容，但需要 X 获知 Batch 大小和所在设备
+        Returns:
+            mask: [B, 1, C, C] 采样得到的全局静态通道掩码
+        """
+        B = X.shape[0]
+        
+        # 1. 获取全局概率矩阵 [C, C]
+        p = self.get_static_prob()
+        
+        # 2. 采样得到离散的 Mask 图 [C, C]
+        # (整个 Batch 共享这一个全局拓扑图)
+        mask = self.bernoulli_gumbel_rsample(p)
+        
+        # 3. 维度扩展对齐，适配 MultiheadAttention [B, 1, C, C]
+        mask = mask.unsqueeze(0).unsqueeze(0).expand(B, 1, -1, -1)
+        
+        return mask

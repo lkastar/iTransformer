@@ -5,7 +5,7 @@ from layers.ema import Decomp
 from layers.StandardNorm import Normalize
 from layers.TrendFlow import TrendFlow
 from layers.SeasonFlow import SeasonFlow
-from layers.masked_attention import Mahalanobis_mask
+from layers.masked_attention import Mahalanobis_mask, StaticGraph_mask
 # from layers.MDM import MDM
 
 
@@ -22,7 +22,7 @@ class Model(nn.Module):
         self.trend_net = TrendFlow(config.seq_len, config.d_model)
         self.season_net = SeasonFlow(config)
         # self.projector = nn.Linear(config.d_model, config.pred_len)
-        self.mask_generator = Mahalanobis_mask(config.seq_len)
+        self.mask_generator = StaticGraph_mask(config.enc_in)
 
         self.projector = nn.Sequential(
             nn.Linear(config.d_model, config.pred_len * 4),
